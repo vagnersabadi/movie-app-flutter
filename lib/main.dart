@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import './models/movieModel.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 const baseUrl = "https://api.themoviedb.org/3/movie/";
 const baseImageUrl = "https://image.tmdb.org/t/p/";
@@ -23,7 +24,7 @@ class MyMovieApp extends StatefulWidget {
 
 class _MyMovieApp extends State<MyMovieApp> {
   Movie nowPlayingMovies;
-  
+
   @override
   void initState() {
     super.initState();
@@ -36,9 +37,20 @@ class _MyMovieApp extends State<MyMovieApp> {
     var decodeJson = jsonDecode(response.body);
     setState(() {
       nowPlayingMovies = Movie.fromJson(decodeJson);
-      print(decodeJson);
+      //print(decodeJson);
     });
   }
+
+//carosel de imagens
+  Widget _buildCarouselSlider() => CarouselSlider(
+        items: nowPlayingMovies.results
+            .map((movieItem) =>
+                Image.network("${baseImageUrl}w342${movieItem.posterPath}"))
+            .toList(),
+        autoPlay: false,
+        height: 240.0,
+        viewportFraction: 0.5,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +73,54 @@ class _MyMovieApp extends State<MyMovieApp> {
             onPressed: () {},
           )
         ],
+      ),
+      body: NestedScrollView(
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return <Widget>[
+            SliverAppBar(
+              title: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Text("NOW PLAYING",
+                      style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ),
+              expandedHeight: 290.0,
+              floating: false,
+              pinned: true,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  children: <Widget>[
+                    Container(
+                      child: Image.network(
+                          "${baseImageUrl}w500/2uNW4WbgBXL25BAbXGLnLqX71Sw.jpg",
+                          fit: BoxFit.cover,
+                          width: 1000.0,
+                          colorBlendMode: BlendMode.dstATop,
+                          color: Colors.blue.withOpacity(0.5)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 35.0),
+                      child: Column(
+                        children: nowPlayingMovies == null
+                            ? <Widget>[
+                                Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                              ]
+                            : <Widget>[_buildCarouselSlider()],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            )
+          ];
+        },
+        body: Text("Scroll Me!"),
       ),
     );
   }
